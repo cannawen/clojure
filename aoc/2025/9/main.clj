@@ -3,10 +3,9 @@
             [clojure.set :as set]))
 
 (defn rotate [arr] (conj (vec (rest arr)) (first arr)))
-(defn rotate' [arr] (flatten [(rest arr) (first arr)]))
 
 (defn pointsInBetween [points]
-  (let [x1 (->> points 
+  (let [x1 (->> points
                 (map first)
                 (apply min))
         x2 (->> points
@@ -18,21 +17,28 @@
         y2 (->> points
                 (map second)
                 (apply max))]
-    
-    ))
+    (if (= x1 x2)
+      (->> (range y1 (inc y2))
+           (map (fn [y] [x1 y])))
+      (->> (range x1 (inc x2))
+           (map (fn [x] [x y1]))))))
+
+(pointsInBetween [[11 1] [11 9]])
 
 (let [points (->> "aoc/2025/9/input-mini.txt"
                   slurp
                   string/split-lines
                   (map (fn [s] (mapv parse-long (string/split s #",")))))
-      pairs (map vector points (rotate points))
+      outline (->> points
+               (map vector (rotate points))
+               (mapcat pointsInBetween)
+               set)
       maxX (->> points
                 (map first)
                 (apply max))
       maxY (->> points
                 (map second)
                 (apply max))]
-  pairs)
+  outline)
 
 (rotate [1 2 3])
-(rotate' [1 2 3])
