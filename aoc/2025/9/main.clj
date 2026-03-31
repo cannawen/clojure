@@ -46,7 +46,7 @@
     ;; already visited this space; return
     unvisited))
 
-(let [points (->> "aoc/2025/9/input-mini.txt"
+(let [points (->> "aoc/2025/9/input.txt"
                   slurp
                   string/split-lines
                   (map (fn [s] (mapv parse-long (string/split s #",")))))
