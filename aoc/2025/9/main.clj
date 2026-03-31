@@ -4,7 +4,7 @@
 
 (defn rotate [arr] (conj (vec (rest arr)) (first arr)))
 
-(defn pointsInBetween [points]
+(defn points-between [points]
   (let [x1 (->> points
                 (map first)
                 (apply min))
@@ -23,22 +23,45 @@
       (->> (range x1 (inc x2))
            (map (fn [x] [x y1]))))))
 
-(pointsInBetween [[11 1] [11 9]])
+(points-between [[11 1] [11 9]])
+
+(defn up [[x y]] [x (dec y)])
+(defn down [[x y]] [x (inc y)])
+(defn left [[x y]] [(dec x) y])
+(defn right [[x y]] [(inc x) y])
+
+(defn go [unvisited bounds current]
+  (let [newlyUnvisited (disj unvisited current)]
+    (if (bounds current)
+      newlyUnvisited))
+  )
 
 (let [points (->> "aoc/2025/9/input-mini.txt"
                   slurp
                   string/split-lines
                   (map (fn [s] (mapv parse-long (string/split s #",")))))
-      outline (->> points
-               (map vector (rotate points))
-               (mapcat pointsInBetween)
-               set)
-      maxX (->> points
+      shape-outline (->> points
+                         (map vector (rotate points))
+                         (mapcat points-between)
+                         set)
+      xMin (- 2)
+      yMin (- 2)
+      xMax (->> points
                 (map first)
-                (apply max))
-      maxY (->> points
+                (apply max)
+                inc
+                inc)
+      yMax (->> points
                 (map second)
-                (apply max))]
-  outline)
+                (apply max)
+                inc
+                inc)
+      outerBounds (->> [[[xMin yMin] [xMin yMax]]
+                        [[xMin yMax] [xMax yMax]]
+                        [[xMax yMax] [xMax yMin]]
+                        [[xMax yMin] [xMin yMin]]]
+                       (mapcat points-between))
+      all-points (for [x (range xMin xMax)] (for [y (range yMin yMax)] [x y]))]
 
-(rotate [1 2 3])
+  (go (set all-points) (set (concat shape-outline outerBounds)) [0,0]))
+
