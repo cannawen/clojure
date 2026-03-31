@@ -32,16 +32,19 @@
 
 (defn go [unvisited bounds current]
   (if (unvisited current)
+    ;; visiting this point; remove from unvisited points
     (let [unvisited (disj unvisited current)]
       (if (bounds current)
+        ;; if we are on a boundary, return
         unvisited
+        ;; otherwise visit all adjacent points
         (-> unvisited
             (go bounds (up current))
             (go bounds (down current))
             (go bounds (left current))
             (go bounds (right current)))))
+    ;; already visited this space; return
     unvisited))
-
 
 (let [points (->> "aoc/2025/9/input-mini.txt"
                   slurp
@@ -56,13 +59,11 @@
       xMax (->> points
                 (map first)
                 (apply max)
-                inc
-                inc)
+                (+ 2))
       yMax (->> points
                 (map second)
                 (apply max)
-                inc
-                inc)
+                (+ 2))
       outer-bounds (->> [[[xMin yMin] [xMin yMax]]
                          [[xMin yMax] [xMax yMax]]
                          [[xMax yMax] [xMax yMin]]
@@ -75,11 +76,9 @@
                       [x y]))
                   (apply concat)
                   set)
-      unvisited-points (go all-points (set/union shape-outline outer-bounds) [0,0])]
-
-  (-> unvisited-points
-      (set/union shape-outline)
-      (set/difference outer-bounds))
-  #_(remove outer-bounds unvisited-points)
-  #_(sort (into shape-outline (vec (remove unvisited-points outer-bounds)))))
-
+      unvisited-points (go all-points (set/union shape-outline outer-bounds) [0,0])
+      shape-points (-> unvisited-points
+                       (set/union shape-outline)
+                       ;; not sure why we need this, but we are getting [-2,-2] otherwise
+                       (set/difference outer-bounds))]
+  )
