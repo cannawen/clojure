@@ -31,10 +31,17 @@
 (defn right [[x y]] [(inc x) y])
 
 (defn go [unvisited bounds current]
-  (let [newlyUnvisited (disj unvisited current)]
-    (if (bounds current)
-      newlyUnvisited))
-  )
+  (if (unvisited current)
+    (let [unvisited (disj unvisited current)]
+      (if (bounds current)
+        unvisited
+        (-> unvisited
+            (go bounds (up current))
+            (go bounds (down current))
+            (go bounds (left current))
+            (go bounds (right current)))))
+    unvisited))
+
 
 (let [points (->> "aoc/2025/9/input-mini.txt"
                   slurp
@@ -56,12 +63,23 @@
                 (apply max)
                 inc
                 inc)
-      outerBounds (->> [[[xMin yMin] [xMin yMax]]
-                        [[xMin yMax] [xMax yMax]]
-                        [[xMax yMax] [xMax yMin]]
-                        [[xMax yMin] [xMin yMin]]]
-                       (mapcat points-between))
-      all-points (for [x (range xMin xMax)] (for [y (range yMin yMax)] [x y]))]
+      outer-bounds (->> [[[xMin yMin] [xMin yMax]]
+                         [[xMin yMax] [xMax yMax]]
+                         [[xMax yMax] [xMax yMin]]
+                         [[xMax yMin] [xMin yMin]]]
+                        (mapcat points-between)
+                        set)
+      all-points (->>
+                  (for [x (range xMin xMax)]
+                    (for [y (range yMin yMax)]
+                      [x y]))
+                  (apply concat)
+                  set)
+      unvisited-points (go all-points (set/union shape-outline outer-bounds) [0,0])]
 
-  (go (set all-points) (set (concat shape-outline outerBounds)) [0,0]))
+  (-> unvisited-points
+      (set/union shape-outline)
+      (set/difference outer-bounds))
+  #_(remove outer-bounds unvisited-points)
+  #_(sort (into shape-outline (vec (remove unvisited-points outer-bounds)))))
 
