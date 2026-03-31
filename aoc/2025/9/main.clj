@@ -17,13 +17,13 @@
         y2 (->> points
                 (map second)
                 (apply max))]
-    (if (= x1 x2)
-      (->> (range y1 (inc y2))
-           (map (fn [y] [x1 y])))
-      (->> (range x1 (inc x2))
-           (map (fn [x] [x y1]))))))
 
-(points-between [[11 1] [11 9]])
+    (->> (for [x (range x1 (inc x2))]
+           (for [y (range y1 (inc y2))]
+             [x y]))
+         (apply concat))))
+
+(points-between [[2 3] [11 7]])
 
 (defn up [[x y]] [x (dec y)])
 (defn down [[x y]] [x (inc y)])
@@ -80,5 +80,22 @@
       shape-points (-> unvisited-points
                        (set/union shape-outline)
                        ;; not sure why we need this, but we are getting [-2,-2] otherwise
-                       (set/difference outer-bounds))]
-  )
+                       (set/difference outer-bounds))
+
+      rectangles (->> (for [p1 points]
+                        (for [p2 points]
+                          (if (= (first p1) (first p2))
+                            (if (< (second p1) (second p2))
+                              [p1 p2]
+                              nil)
+                            (if (< (first p1) (first p2))
+                              [p1 p2]
+                              nil))))
+                      (apply concat)
+                      (filter some?)
+                      (map points-between)
+                      (sort-by count >))]
+  (->> rectangles
+       (filter (fn [rectangle] (set/subset? rectangle shape-points)))
+       (map count)
+       (apply max)))
